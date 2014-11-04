@@ -1,22 +1,21 @@
 package clobber;
 import game.*;
 
-public abstract class BaseClobberPlayer extends GamePlayer{
+public abstract class BaseClobberPlayerH2 extends GamePlayer{
 	public static int ROWS = ClobberState.ROWS;
 	public static int COLS = ClobberState.COLS;
 	public static final int MAX_SCORE = ROWS*COLS*5 +1;
 	public static char HOME = ClobberState.homeSym;
 	public static char AWAY = ClobberState.awaySym;
-	public static int [][] weights;
+	public int [][] weights;
 	
 	
-	public BaseClobberPlayer(String nickname, boolean isDeterministic) {
+	public BaseClobberPlayerH2(String nickname, boolean isDeterministic) {
 		super(nickname, new ClobberState(), isDeterministic);
 		weights = new int[ROWS][COLS];
 		for (int i = 0; i < ROWS; i++){
 			for (int j = 0; j < COLS; j++){
-				int temp = Math.min(2,Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j));
-				System.out.println(temp);
+				int temp = Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j);
 				weights[i][j]=temp;
 			}
 		}
@@ -41,7 +40,6 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 			return p;
 		}
 		p.count = 1;
-		p.sum = weights[r][c];
 		visited[r][c] = true;
 		for (int i = -1; i<2; i+=2){
 			int tmpRow = r + i;
@@ -59,7 +57,6 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 						p.sign = false;
 					}
 					p.count += neighborPair.count;
-					p.sum += neighborPair.sum;
 				}
 			}
 			if(posOK(r,tmpCol)) {
@@ -75,7 +72,6 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 						p.sign = false;
 					}
 					p.count += neighborPair.count;
-					p.sum += neighborPair.sum;
 				}
 			}
 		}
@@ -108,7 +104,7 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 				}
 			}
 		}
-		return 4*isolated - 3*largestGroup - 2*secondGroup; 
+		return 5*isolated - 3*largestGroup - 2*secondGroup; 
 	}
 	/*
 	 * Returns score of board

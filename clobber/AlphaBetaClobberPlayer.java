@@ -34,9 +34,9 @@ public class AlphaBetaClobberPlayer extends BaseClobberPlayer {
 		super(name, false);
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
-			int temp = 3;
-			if (i > 8){
-				temp = i-7;
+			int temp = 4;
+			if (i > 7){
+				temp = (i-3)*(i-3);
 			}
 			depthArray[i] = temp; 
 		}
