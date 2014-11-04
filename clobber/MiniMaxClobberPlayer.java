@@ -34,7 +34,7 @@ public class MiniMaxClobberPlayer extends BaseClobberPlayer {
 		super(name, false);
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
-			int temp = 1;
+			int temp = 3;
 			if (i > 8){
 				temp = i-7;
 			}
@@ -201,11 +201,15 @@ public class MiniMaxClobberPlayer extends BaseClobberPlayer {
 	public GameMove getMove(GameState state, String lastMove)
 	{
 		ClobberState board = (ClobberState)state;
+		long startTime = System.nanoTime();
 		if(board.numMoves < 2){
 			movesMade = 0;
 		}
 		double temp = minimax(board,0);
+		long endTime = System.nanoTime();
 		System.out.println("bestScore: " + temp);
+		long time = (endTime-startTime)/10000000;
+		System.out.println("movesMade: " + movesMade + "Turn time: " + time);
 		movesMade +=2;
 		return mvStack[0];
 		
