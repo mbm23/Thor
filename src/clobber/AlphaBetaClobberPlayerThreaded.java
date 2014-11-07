@@ -2,6 +2,8 @@ package clobber;
 import game.*;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements Runnable {
@@ -10,10 +12,13 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 	public double[][] bestScore = new double[ROWS][COLS];
 	protected ScoredClobberMove[][] bestMoves = new ScoredClobberMove[ROWS][COLS];
 	public int depthLimit;
+	ArrayList<Coords> orderedMoves = new ArrayList<Coords>(30);
 	// protected ScoredClobberMove [] mvStack;
 	int movesMade = 0;
 	ClobberState board;
 	double currBest;
+	int moveIndex = 0;
+	boolean topToMax;
 	ScoredClobberMove currBestMove;
 	
 	protected class ScoredClobberMove extends ClobberMove {
@@ -41,9 +46,25 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 		for (int i =0; i < MAX_DEPTH; i++) {
 			int temp = 4;
 			if (i > 4){
-				temp = (i-3)*(i-3);
+				temp = (i-1)*(i-1);
 			}
 			depthArray[i] = temp; 
+		}
+		int [] rows = new int[ROWS];
+		int [] cols = new int[COLS];
+		for (int i = 0; i < ROWS; i++){
+			rows[i] = i;
+		}
+		for (int i = 0; i < COLS; i++){
+			cols[i] = i;
+		}
+		shuffle(rows);
+		shuffle(cols);
+		for (int i = 0; i < ROWS; i++){
+			for (int j = 0; j < COLS; j++){
+				Coords temp = new Coords(rows[i],cols[j]);
+				orderedMoves.add(temp);
+			}
 		}
 	}
 	
@@ -115,6 +136,12 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 			char OPP = currTurn == GameState.Who.HOME ? AWAY : HOME;
 			double bestScore = (brd.getWho() == GameState.Who.HOME ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
 			boolean toMaximize = (brd.getWho() == GameState.Who.HOME);
+			if (topToMax){
+				alpha = Math.max(alpha, currBest);
+			}
+			else{
+				beta = Math.min(beta, currBest);
+			}
 			ScoredClobberMove bestMove = mvStack[currDepth];
 			ScoredClobberMove nextMove = mvStack[currDepth +1];
 			bestMove.set(new ClobberMove(0,0,0,1), bestScore);
@@ -131,6 +158,12 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 			for (int i = 0; i < ROWS; i++) {
 				int r = rows[i];
 				for(int j = 0; j < COLS; j++){
+					if (topToMax){
+						alpha = Math.max(alpha, currBest);
+					}
+					else{
+						beta = Math.min(beta, currBest);
+					}
 					int c = cols[j];
 					if(brd.board[r][c] == PLAYER){
 						if(posOK(r-1,c)){
@@ -247,13 +280,15 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 	}
 	public GameMove getMove(GameState state, String lastMove)
 	{
+		moveIndex = 0;
+		ExecutorService executor = Executors.newFixedThreadPool(4);
 		board = (ClobberState)state;
 		System.out.println(board);
 		long startTime = System.nanoTime();
 		if(board.numMoves < 2){
 			movesMade = 0;
 		}
-		int [] rows = new int[ROWS];
+		/*int [] rows = new int[ROWS];
 		int [] cols = new int[COLS];
 		for (int i = 0; i < ROWS; i++){
 			rows[i] = i;
@@ -262,25 +297,26 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 			cols[i] = i;
 		}
 		shuffle(rows);
-		shuffle(cols);
+		shuffle(cols);*/
 		currBest = MAX_SCORE + 100;
 		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
+		topToMax = toMaximize;
 		if (toMaximize){
 			currBest = -MAX_SCORE -100;
 		}
 		
 		for (int i = 0; i < COLS; i++) {
-			int c = cols[i];
-			Thread[] threads = new Thread[6];
+			//int c = cols[i];
+			//Thread[] threads = new Thread[6];
 			for(int j = 0; j < ROWS; j++){
-				int r = rows[j];
-				String threadName = "" + r + "," + c;
-				threads[j] = new Thread(this, threadName);
-				threads[j].start();
-				
+				//int r = rows[j];
+				//String threadName = "" + r + "," + c;
+				String threadName = "Thor Hammer";
+				Thread thrd = new Thread(this, threadName);
+				executor.execute(thrd);
 			}
-			for(int j = 0; j < threads.length; j++){
-				try {
+			/*for(int j = 0; j < threads.length; j++){
+				/*try {
 					threads[j].join();
 				} catch (InterruptedException e) {
 					System.out.println("thread errors :(");
@@ -288,7 +324,7 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 					e.printStackTrace();
 				}
 				int r = rows[j];
-				if (toMaximize) {
+				/*if (toMaximize) {
 					synchronized(this){
 						if (bestScore[r][c] > currBest){
 							currBest = bestScore[r][c];
@@ -303,9 +339,17 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 						}
 					}
 				}
-			}
+			}*/
 		}
-		
+		executor.shutdown();
+        while (!executor.isTerminated()) {
+        	try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
 		long endTime = System.nanoTime();
 		System.out.println("bestScore: " + currBest);
 		long time = (endTime-startTime)/10000000;
@@ -313,6 +357,16 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 		movesMade +=2;
 		System.out.println(currBestMove);
 		System.out.println(board);
+		for (int i = 0; i < COLS; i++) {
+			for(int j = 0; j < ROWS; j++){
+				orderedMoves.set(j*COLS+i, new Coords(j,i,bestMoves[j][i].score));
+			}
+		}
+		Collections.sort(orderedMoves);
+		if (toMaximize){
+			Collections.reverse(orderedMoves);
+		}
+		
 		return currBestMove;
 		
 	}
@@ -325,12 +379,19 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 
 	@Override
 	public void run() {
+		int moveNum;
+		synchronized(this){
+			moveNum = moveIndex;
+			moveIndex++;
+		}
 		ClobberState threadBoard = (ClobberState) board.clone();
-		Thread t = Thread.currentThread();
+		/*Thread t = Thread.currentThread();
 	    String name = t.getName();
 	    String[] pieces = name.split(",");
 	    int row = Integer.parseInt(pieces[0]);
-	    int col = Integer.parseInt(pieces[1]);
+	    int col = Integer.parseInt(pieces[1]);*/
+		int row = orderedMoves.get(moveNum).row;
+		int col = orderedMoves.get(moveNum).col;
 	    ScoredClobberMove[] thrdMvStack = new ScoredClobberMove [MAX_DEPTH];
 		for (int i = 0; i < MAX_DEPTH; i++) {
 			thrdMvStack[i] = new ScoredClobberMove(0);
@@ -343,10 +404,23 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 	    else{
 	    	temp = topAlphaBeta(threadBoard,0, -10000000, currBest, row, col, thrdMvStack);
 	    }
-		
 		bestScore[row][col]=temp;
 		bestMoves[row][col]= thrdMvStack[0];
-		
+		if (toMaximize) {
+			synchronized(this){
+				if (bestScore[row][col] > currBest){
+					currBest = bestScore[row][col];
+					currBestMove = bestMoves[row][col];
+				}
+			}
+		} else {
+			synchronized(this){
+				if (bestScore[row][col] < currBest){
+					currBest = bestScore[row][col];
+					currBestMove = bestMoves[row][col];
+				}
+			}
+		}
 	}
 	private double topAlphaBeta (ClobberState brd, int currDepth, double alpha, double beta, int r, int c, ScoredClobberMove[] mvStack) {
 		boolean isTerminal = terminalValue(brd, mvStack[currDepth]);
