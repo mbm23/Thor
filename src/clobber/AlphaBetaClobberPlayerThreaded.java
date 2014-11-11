@@ -12,14 +12,17 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 	public double[][] bestScore = new double[ROWS][COLS];
 	public ArrayList<Coords> playableSpots = new ArrayList<Coords>(30);
 	protected ScoredClobberMove[][] bestMoves = new ScoredClobberMove[ROWS][COLS];
+	boolean fixed = true;
 	public int depthLimit;
 	ArrayList<Coords> orderedMoves = new ArrayList<Coords>(30);
 	// protected ScoredClobberMove [] mvStack;
 	int movesMade = 0;
+	int fixedDepth = 4;
 	ClobberState board;
 	double currBest;
 	int moveIndex = 0;
 	boolean topToMax;
+	double timeRemaining = 300;
 	ScoredClobberMove currBestMove;
 	
 	protected class ScoredClobberMove extends ClobberMove {
@@ -138,7 +141,7 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 		boolean isTerminal = terminalValue(brd, mvStack[currDepth]);
 		if (isTerminal){
 			return 0;
-		} else if (currDepth == depthArray[movesMade]) {
+		} else if (currDepth == (fixed ? fixedDepth : depthArray[movesMade])) {
 			double tempScore = evalBoard(brd);
 			mvStack[currDepth].set( new ClobberMove(0,0,0,1), tempScore);
 			return tempScore;
@@ -298,33 +301,27 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 	/* Method called to get the move - removes extra moves*/
 	public GameMove getMove(GameState state, String lastMove)
 	{
-		
-		moveIndex = 0;
-		ExecutorService executor = Executors.newFixedThreadPool(4);
+		double maxTime = timeRemaining*.67;
 		board = (ClobberState)state;
-		System.out.println(board);
-		long startTime = System.nanoTime();
-		if(board.numMoves < 2){
-			movesMade = board.numMoves;
-			resetOrderedMoves();
-		}
-		/* Clean up Move OrderList*/
 		for(int i = 0; i < orderedMoves.size(); i++){
 			if(board.board[orderedMoves.get(i).row][orderedMoves.get(i).col] == board.emptySym){
 				orderedMoves.remove(i);
 			}
 		}
-		/*int [] rows = new int[ROWS];
-		int [] cols = new int[COLS];
-		for (int i = 0; i < ROWS; i++){
-			rows[i] = i;
+		if(board.numMoves < 2){
+			movesMade = board.numMoves;
+			resetOrderedMoves();
+			timeRemaining = 300;
 		}
-		for (int i = 0; i < COLS; i++){
-			cols[i] = i;
-		}
-		shuffle(rows);
-		shuffle(cols);*/
-		/*Establish new scores for this iteration*/
+		ScoredClobberMove tempBestMove = getInitMove(state, lastMove);
+		/*Lets Threads no what move place to start at in move ordering*/
+		moveIndex = 0;
+		ExecutorService executor = Executors.newFixedThreadPool(6);
+		System.out.println(board);
+		long startTime = System.nanoTime();
+		
+		/* Clean up Move OrderList*/
+		
 		currBest = MAX_SCORE + 100;
 		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
 		topToMax = toMaximize;
@@ -332,43 +329,82 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 			currBest = -MAX_SCORE -100;
 		}
 		System.out.println("currBest start: " + currBest);
-		
-		//for (int i = 0; i < COLS; i++) {
-			//int c = cols[i];
-			//Thread[] threads = new Thread[6];
 			for(int j = 0; j < orderedMoves.size(); j++){
-				//int r = rows[j];
-				//String threadName = "" + r + "," + c;
 				String threadName = "Thor Hammer";
 				Thread thrd = new Thread(this, threadName);
 				executor.execute(thrd);
 			}
-			/*for(int j = 0; j < threads.length; j++){
-				/*try {
-					threads[j].join();
-				} catch (InterruptedException e) {
-					System.out.println("thread errors :(");
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				int r = rows[j];
-				/*if (toMaximize) {
-					synchronized(this){
-						if (bestScore[r][c] > currBest){
-							currBest = bestScore[r][c];
-							currBestMove = bestMoves[r][c];
-						}
-					}
-				} else {
-					synchronized(this){
-						if (bestScore[r][c] < currBest){
-							currBest = bestScore[r][c];
-							currBestMove = bestMoves[r][c];
-						}
-					}
-				}
-			}*/
-		//}
+		executor.shutdown();
+        while (!executor.isTerminated()) {
+        	try {
+        		long currTime = System.nanoTime();
+        		double timeTaken = (currTime-startTime)/1000000000.0;
+        		System.out.println(timeTaken);
+        		if (timeTaken > maxTime){
+        			executor.shutdownNow();
+        			System.out.println("Move Calc over time");
+        		}
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+		long endTime = System.nanoTime();
+		boolean useOrig = false;
+		if(toMaximize){
+			if(tempBestMove.score > currBestMove.score){
+				useOrig = true;
+			}
+		} else {
+			if(tempBestMove.score < currBestMove.score){
+				useOrig = true;
+			}
+		}
+		if(useOrig){
+			currBest = tempBestMove.score;
+			currBestMove = tempBestMove;
+		} else{
+			for(int i = 0; i < orderedMoves.size(); i++){
+				Coords temp = orderedMoves.get(i);
+				temp.score = bestMoves[temp.row][temp.col].score;
+				orderedMoves.set(i, temp);
+			}
+			Collections.sort(orderedMoves);
+			if (toMaximize){
+				Collections.reverse(orderedMoves);
+			}
+		}
+		System.out.println("bestScore: " + currBest);
+		double time = (endTime-startTime)/1000000000.0;
+		timeRemaining -= time;
+		System.out.println("movesMade: " + movesMade + "Turn time: " + time);
+		movesMade +=2;
+		System.out.println(currBestMove);
+		System.out.println(board);
+		
+		return currBestMove;
+	}
+	/* Method called to get the move - removes extra moves*/
+	public ScoredClobberMove getInitMove(GameState state, String lastMove)
+	{
+		
+		/*Lets Threads no what move place to start at in move ordering*/
+		moveIndex = 0;
+		ExecutorService executor = Executors.newFixedThreadPool(6);
+		fixed = true;
+		currBest = MAX_SCORE + 100;
+		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
+		topToMax = toMaximize;
+		if (toMaximize){
+			currBest = -MAX_SCORE -100;
+		}
+		System.out.println("currBest start: " + currBest);
+			for(int j = 0; j < orderedMoves.size(); j++){
+				String threadName = "Thor Hammer";
+				Thread thrd = new Thread(this, threadName);
+				executor.execute(thrd);
+			}
 		executor.shutdown();
         while (!executor.isTerminated()) {
         	try {
@@ -378,13 +414,6 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 				e.printStackTrace();
 			}
         }
-		long endTime = System.nanoTime();
-		System.out.println("bestScore: " + currBest);
-		long time = (endTime-startTime)/10000000;
-		System.out.println("movesMade: " + movesMade + "Turn time: " + time);
-		movesMade +=2;
-		System.out.println(currBestMove);
-		System.out.println(board);
 		for(int i = 0; i < orderedMoves.size(); i++){
 				Coords temp = orderedMoves.get(i);
 				temp.score = bestMoves[temp.row][temp.col].score;
@@ -394,10 +423,10 @@ public class AlphaBetaClobberPlayerThreaded extends BaseClobberPlayer implements
 		if (toMaximize){
 			Collections.reverse(orderedMoves);
 		}
-		
+		fixed = false;
 		return currBestMove;
-		
 	}
+	
 	public static void main(String [] args)
 	{
 		int depth = 4;
