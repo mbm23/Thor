@@ -15,7 +15,8 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 		weights = new int[ROWS][COLS];
 		for (int i = 0; i < ROWS; i++){
 			for (int j = 0; j < COLS; j++){
-				int temp = Math.min(2,Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j));
+				int temp = Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j);
+				temp = temp > 1 ? 2 : 1;
 				System.out.println(temp);
 				weights[i][j]=temp;
 			}
@@ -96,19 +97,20 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 						isolated+=temp.count;
 					}
 					else{
-						if (temp.count > largestGroup) {
-							secondGroup = largestGroup;
-							largestGroup = temp.count;
+						if (temp.sum > largestGroup) {
+							//secondGroup = largestGroup;
+							largestGroup = temp.sum;
 						}
-						else if (temp.count > secondGroup){
-							secondGroup = temp.count;
-						}
+						secondGroup += temp.sum;
+						
 						
 					}
 				}
 			}
 		}
-		return 4*isolated - 3*largestGroup - 2*secondGroup; 
+		/*System.out.println(brd.toString());
+		System.out.println("isoloated: " + isolated + ", largestGroup: " + largestGroup);*/
+		return 10*isolated - 3*largestGroup - 1*secondGroup; 
 	}
 	/*
 	 * Returns score of board
