@@ -4,7 +4,7 @@ import game.*;
 public abstract class BaseClobberPlayerH1 extends GamePlayer{
 	public static int ROWS = ClobberState.ROWS;
 	public static int COLS = ClobberState.COLS;
-	public static final int MAX_SCORE = ROWS*COLS*5 +1;
+	public static final int MAX_SCORE = ROWS*COLS*100 +1;
 	public static char HOME = ClobberState.homeSym;
 	public static char AWAY = ClobberState.awaySym;
 	

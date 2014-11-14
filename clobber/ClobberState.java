@@ -98,7 +98,9 @@ public class ClobberState extends GameState {
 		parseMsgSuffix(s.substring(s.indexOf('[')));
 	}
 	public String toString()
-	{ return Util.toString(board) + msgSuffix(); }
+	{ //return Util.toString(board) + msgSuffix(); 
+		return Util.toString(board);}
+	
 	public String msgString()
 	{ return Util.msgString(board) + this.msgSuffix(); }
 }

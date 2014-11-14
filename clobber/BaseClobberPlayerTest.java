@@ -1,21 +1,26 @@
 package clobber;
 import game.*;
 
-public abstract class BaseClobberPlayerH2 extends GamePlayer{
+public abstract class BaseClobberPlayerTest extends GamePlayer{
 	public static int ROWS = ClobberState.ROWS;
 	public static int COLS = ClobberState.COLS;
 	public static final int MAX_SCORE = ROWS*COLS*100 +1;
 	public static char HOME = ClobberState.homeSym;
 	public static char AWAY = ClobberState.awaySym;
-	public int [][] weights;
+	public static int [][] weights;
 	
 	
-	public BaseClobberPlayerH2(String nickname, boolean isDeterministic) {
+	public BaseClobberPlayerTest(String nickname, boolean isDeterministic) {
 		super(nickname, new ClobberState(), isDeterministic);
 		weights = new int[ROWS][COLS];
 		for (int i = 0; i < ROWS; i++){
 			for (int j = 0; j < COLS; j++){
 				int temp = Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j);
+				/*if ( i == 0  && j == 0 || i ==0 && j == COLS-1 || i == ROWS - 1 && j == 0 || i == ROWS -1 && j == COLS -1){
+					temp = -2;
+				}*/
+				temp = temp > 1 ? 1 : 2;
+				System.out.println(temp);
 				weights[i][j]=temp;
 			}
 		}
@@ -40,6 +45,7 @@ public abstract class BaseClobberPlayerH2 extends GamePlayer{
 			return p;
 		}
 		p.count = 1;
+		p.sum = weights[r][c];
 		visited[r][c] = true;
 		for (int i = -1; i<2; i+=2){
 			int tmpRow = r + i;
@@ -57,6 +63,7 @@ public abstract class BaseClobberPlayerH2 extends GamePlayer{
 						p.sign = false;
 					}
 					p.count += neighborPair.count;
+					p.sum += neighborPair.sum;
 				}
 			}
 			if(posOK(r,tmpCol)) {
@@ -72,6 +79,7 @@ public abstract class BaseClobberPlayerH2 extends GamePlayer{
 						p.sign = false;
 					}
 					p.count += neighborPair.count;
+					p.sum += neighborPair.sum;
 				}
 			}
 		}
@@ -92,19 +100,14 @@ public abstract class BaseClobberPlayerH2 extends GamePlayer{
 						isolated+=temp.count;
 					}
 					else{
-						if (temp.count > largestGroup) {
-							secondGroup = largestGroup;
-							largestGroup = temp.count;
-						}
-						else if (temp.count > secondGroup){
-							secondGroup = temp.count;
-						}
-						
+						largestGroup += temp.count*temp.sum;
 					}
 				}
 			}
 		}
-		return 5*isolated - 3*largestGroup - 0*secondGroup; 
+		/*System.out.println(brd.toString());
+		System.out.println("isoloated: " + isolated + ", largestGroup: " + largestGroup);*/
+		return 5*isolated - 3*largestGroup; 
 	}
 	/*
 	 * Returns score of board

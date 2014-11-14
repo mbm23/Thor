@@ -4,7 +4,7 @@ import game.*;
 public abstract class BaseClobberPlayer extends GamePlayer{
 	public static int ROWS = ClobberState.ROWS;
 	public static int COLS = ClobberState.COLS;
-	public static final int MAX_SCORE = ROWS*COLS*5 +1;
+	public static final int MAX_SCORE = ROWS*COLS*100 +1;
 	public static char HOME = ClobberState.homeSym;
 	public static char AWAY = ClobberState.awaySym;
 	public static int [][] weights;
@@ -15,7 +15,8 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 		weights = new int[ROWS][COLS];
 		for (int i = 0; i < ROWS; i++){
 			for (int j = 0; j < COLS; j++){
-				int temp = Math.min(2,Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j));
+				int temp = Math.min(Math.min(Math.min(i+1, j+1), ROWS - i), COLS-j);
+				temp = temp > 1 ? 1 : 2;
 				System.out.println(temp);
 				weights[i][j]=temp;
 			}
@@ -96,19 +97,21 @@ public abstract class BaseClobberPlayer extends GamePlayer{
 						isolated+=temp.count;
 					}
 					else{
-						if (temp.count > largestGroup) {
-							secondGroup = largestGroup;
-							largestGroup = temp.count;
-						}
-						else if (temp.count > secondGroup){
-							secondGroup = temp.count;
-						}
+//						if (temp.sum > largestGroup) {
+//							//secondGroup = largestGroup;
+//							largestGroup = temp.sum;
+//						}
+//						secondGroup += temp.sum;
+						largestGroup += temp.count*temp.sum;
+						
 						
 					}
 				}
 			}
 		}
-		return 4*isolated - 3*largestGroup - 2*secondGroup; 
+		/*System.out.println(brd.toString());
+		System.out.println("isoloated: " + isolated + ", largestGroup: " + largestGroup);*/
+		return 0*isolated - 3*largestGroup; 
 	}
 	/*
 	 * Returns score of board

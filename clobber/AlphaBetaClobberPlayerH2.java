@@ -35,7 +35,7 @@ public class AlphaBetaClobberPlayerH2 extends BaseClobberPlayerH2 {
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
 			int temp = 4;
-			if (i > 20){
+			if (i > 4){
 				temp = (i-3)*(i-3);
 			}
 			depthArray[i] = temp; 

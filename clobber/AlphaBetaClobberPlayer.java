@@ -35,7 +35,7 @@ public class AlphaBetaClobberPlayer extends BaseClobberPlayer {
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
 			int temp = 4;
-			if (i > 7){
+			if (i > 4){
 				temp = (i-3)*(i-3);
 			}
 			depthArray[i] = temp; 
@@ -298,7 +298,6 @@ public class AlphaBetaClobberPlayer extends BaseClobberPlayer {
 					}
 				}
 			}
-			
 			return bestScore;
 		}
 		
@@ -312,17 +311,15 @@ public class AlphaBetaClobberPlayer extends BaseClobberPlayer {
 		}
 		double temp = alphaBeta(board,0, -10000000, 10000000);
 		long endTime = System.nanoTime();
-		System.out.println("bestScore: " + temp);
-		long time = (endTime-startTime)/10000000;
-		System.out.println("movesMade: " + movesMade + "Turn time: " + time);
+		double time = (endTime-startTime)/1000000000.0;
+		System.out.println("Time taken: " + time);
 		movesMade +=2;
 		return mvStack[0];
-		
 	}
 	public static void main(String [] args)
 	{
 		int depth = 4;
-		GamePlayer p = new AlphaBetaClobberPlayer("AlphaBeta " + depth, depth);
+		GamePlayer p = new AlphaBetaClobberPlayer("AlphaBetA " + depth, depth);
 		p.compete(args, 1);
 	}
 }
