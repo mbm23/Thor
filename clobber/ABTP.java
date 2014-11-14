@@ -54,7 +54,7 @@ public class ABTP extends BaseClobberPlayerTest implements Runnable {
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
 			int temp = 6;
-			if (i > 3){
+			if (i > 4){
 				temp = (5)*(5);
 			}
 			depthArray[i] = temp; 
@@ -335,7 +335,6 @@ public class ABTP extends BaseClobberPlayerTest implements Runnable {
 			timeRemaining = 300;
 		}
 		double maxTime = Math.min(210, Math.max(2,timeRemaining*.75 - 10));
-		maxTime =5;
 		ScoredClobberMove tempBestMove = getInitMove(state, lastMove);
 		/*Lets Threads no what move place to start at in move ordering*/
 		moveIndex = 0;

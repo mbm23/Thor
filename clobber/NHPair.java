@@ -1,5 +1,7 @@
 package clobber;
-
+/*
+ * Essentially just a struct
+ */
 public class NHPair {
 	public int count;
 	public int sum;

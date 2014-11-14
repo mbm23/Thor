@@ -1,5 +1,8 @@
 package clobber;
-
+/*
+ * This class holds a pair of coords and a score cooresponding to the cords
+ * it also implements an equals an hashable method based on the row and column
+ */
 public class Coords implements Comparable{
 	public int row;
 	public int col;

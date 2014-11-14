@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class ABNH extends BCNH implements Runnable {
+public class ABNH2 extends BCNH2 implements Runnable {
 	protected class ScoredClobberMove extends ClobberMove {
 		public double score;
 		public ScoredClobberMove(ClobberMove c, double s) {
@@ -68,7 +68,7 @@ public class ABNH extends BCNH implements Runnable {
 	   * anything else = hard
 	   */
 		int difficulty = 3;
-		GamePlayer p = new ABNH("newHeur " + difficulty, difficulty);
+		GamePlayer p = new ABNH2("new3Heur " + difficulty, difficulty);
 		p.compete(args, 1);
 	}
 	/*Shuffles and array Dr.Z method*/
@@ -86,7 +86,7 @@ public class ABNH extends BCNH implements Runnable {
 	 * Constructor that sets depth limits and time limits
 	 * Difficulty levels lead to new values here
 	 */
-	public ABNH(String name, int d){
+	public ABNH2(String name, int d){
 		super(name, false);
 		depthLimit = 5;
 		for (int i =0; i < MAX_DEPTH; i++) {
