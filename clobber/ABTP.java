@@ -323,10 +323,6 @@ public class ABTP extends BaseClobberPlayerTest implements Runnable {
 		frame.canvas.setBoard(state);
 		frame.canvas.repaint();
 		frame.canvas.getMove(move, state, this);
-		
-	
-		double maxTime = timeRemaining*.67;
-		maxTime = 5;
 		board = (ClobberState)state;
 		for(int i = 0; i < orderedMoves.size(); i++){
 			if(board.board[orderedMoves.get(i).row][orderedMoves.get(i).col] == board.emptySym){
@@ -338,6 +334,7 @@ public class ABTP extends BaseClobberPlayerTest implements Runnable {
 			resetOrderedMoves();
 			timeRemaining = 300;
 		}
+		double maxTime = Math.min(210, Math.max(2,timeRemaining*.75 - 10));
 		ScoredClobberMove tempBestMove = getInitMove(state, lastMove);
 		/*Lets Threads no what move place to start at in move ordering*/
 		moveIndex = 0;

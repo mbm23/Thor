@@ -28,7 +28,15 @@ public class ABNH extends BCNH implements Runnable {
 	/*How layers deep to go at different durns*/
 	public static void main(String [] args)
 	{
-		int depth = 4;
+		int depth = 5;
+		if (args.length > 0){
+		  if (args[0] == "e" || args[0] == "E"){
+		    depth =1;
+		  }
+		  else if (args[0] == "m"  || args[0] == "M"){
+		    depth = 2;
+		  }
+		}
 		GamePlayer p = new ABNH("newHeur " + depth, depth);
 		p.compete(args, 1);
 	}
@@ -43,9 +51,11 @@ public class ABNH extends BCNH implements Runnable {
 	}
 	public final int MAX_DEPTH = 29;
 	public int[] depthArray = new int[MAX_DEPTH];
+	public int[] maxTimeArray = new int[MAX_DEPTH];
 	public double[][] bestScore = new double[ROWS][COLS];
 	public ArrayList<Coords> playableSpots = new ArrayList<Coords>(30);
 	protected ScoredClobberMove[][] bestMoves = new ScoredClobberMove[ROWS][COLS];
+	public int thrdNum = Runtime.getRuntime().availableProcessors();
 	boolean fixed = true;
 	public int depthLimit;
 	ArrayList<Coords> orderedMoves = new ArrayList<Coords>(30);
@@ -66,10 +76,25 @@ public class ABNH extends BCNH implements Runnable {
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
 			int temp = (int) (i/1.5 + 6);
+			int tempTime = 15;
 			if (i > 3){
 				temp = MAX_DEPTH;
+				tempTime = 100;
 			}
-			depthArray[i] = temp; 
+			if (i > 4) {
+			  tempTime = 210;
+			}
+			// Set Opponent Level - Easy or medium by changing depth
+			if( d == 1){
+			  temp = 1;
+			  depthLimit = 1;
+			}
+			else if( d ==2 ){
+			  temp = 4;
+			  depthLimit = 3;
+			}
+			depthArray[i] = temp;
+			maxTimeArray[i] = tempTime;
 		}
 		
 	}
@@ -257,7 +282,7 @@ public class ABNH extends BCNH implements Runnable {
 		
 		/*Lets Threads no what move place to start at in move ordering*/
 		moveIndex = 0;
-		ExecutorService executor = Executors.newFixedThreadPool(3);
+		ExecutorService executor = Executors.newFixedThreadPool(thrdNum *3 /4);
 		fixed = true;
 		currBest = MAX_SCORE + 100;
 		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
@@ -295,8 +320,6 @@ public class ABNH extends BCNH implements Runnable {
 	/* Method called to get the move - removes extra moves*/
 	public GameMove getMove(GameState state, String lastMove)
 	{
-    double maxTime = Math.min(210, Math.max(2,timeRemaining*.75 - 10));
-    maxTime = 5;
 		board = (ClobberState)state;
 		for(int i = 0; i < orderedMoves.size(); i++){
 			if(board.board[orderedMoves.get(i).row][orderedMoves.get(i).col] == board.emptySym){
@@ -308,10 +331,12 @@ public class ABNH extends BCNH implements Runnable {
 			resetOrderedMoves();
 			timeRemaining = 300;
 		}
+		double maxTime = Math.min(maxTimeArray[movesMade], Math.max(2,timeRemaining*.75 - 10));
+    //maxTime = 5;
 		ScoredClobberMove tempBestMove = getInitMove(state, lastMove);
 		/*Lets Threads no what move place to start at in move ordering*/
 		moveIndex = 0;
-		ExecutorService executor = Executors.newFixedThreadPool(3);
+		ExecutorService executor = Executors.newFixedThreadPool(thrdNum *3 /4);
 		//System.out.println(board);
 		long startTime = System.nanoTime();
 		
