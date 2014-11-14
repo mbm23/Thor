@@ -335,6 +335,7 @@ public class ABTP extends BaseClobberPlayerTest implements Runnable {
 			timeRemaining = 300;
 		}
 		double maxTime = Math.min(210, Math.max(2,timeRemaining*.75 - 10));
+		maxTime =5;
 		ScoredClobberMove tempBestMove = getInitMove(state, lastMove);
 		/*Lets Threads no what move place to start at in move ordering*/
 		moveIndex = 0;

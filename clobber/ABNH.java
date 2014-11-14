@@ -28,16 +28,13 @@ public class ABNH extends BCNH implements Runnable {
 	/*How layers deep to go at different durns*/
 	public static void main(String [] args)
 	{
-		int depth = 5;
-		if (args.length > 0){
-		  if (args[0] == "e" || args[0] == "E"){
-		    depth =1;
-		  }
-		  else if (args[0] == "m"  || args[0] == "M"){
-		    depth = 2;
-		  }
-		}
-		GamePlayer p = new ABNH("newHeur " + depth, depth);
+	  /* Set difficulty with the following Variable
+	   * 1 = easy
+	   * 2 = median
+	   * anything else = hard
+	   */
+		int difficulty = 3;
+		GamePlayer p = new ABNH("newHeur " + difficulty, difficulty);
 		p.compete(args, 1);
 	}
 	protected static void shuffle (int [] ary) {
@@ -76,12 +73,12 @@ public class ABNH extends BCNH implements Runnable {
 		depthLimit = d;
 		for (int i =0; i < MAX_DEPTH; i++) {
 			int temp = (int) (i/1.5 + 6);
-			int tempTime = 15;
-			if (i > 3){
+			int tempTime = 15+i*2;
+			if (i > 4){
 				temp = MAX_DEPTH;
-				tempTime = 100;
+				tempTime = 130;
 			}
-			if (i > 4) {
+			if (i > 5) {
 			  tempTime = 210;
 			}
 			// Set Opponent Level - Easy or medium by changing depth
