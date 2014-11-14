@@ -25,7 +25,31 @@ public class Coords implements Comparable{
 			int diff = (int) ( score - otherScore);
 			return diff;
 		}
-		
-		
+	}
+	public boolean equals(Object other)
+	{
+	   if (other == null)
+	   {
+	      return false;
+	   }
+
+	   if (this.getClass() != other.getClass())
+	   {
+	      return false;
+	   }
+
+	   if (this.row != ((Coords)other).row)
+	   {
+	      return false;
+	   }
+
+	   if (this.col != ((Coords)other).col)
+	   {
+	      return false;
+	   }
+	   return true;
+	}
+	public int hashCode() {
+	  return row + col*7;
 	}
 }

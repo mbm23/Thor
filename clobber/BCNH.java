@@ -1,5 +1,6 @@
 package clobber;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import game.*;
 
@@ -21,8 +22,8 @@ public abstract class BCNH extends GamePlayer{
 				/*if ( i == 0  && j == 0 || i ==0 && j == COLS-1 || i == ROWS - 1 && j == 0 || i == ROWS -1 && j == COLS -1){
 					temp = -2;
 				}*/
-				temp = temp > 1 ? 1 : 2;
-				System.out.println(temp);
+				temp = temp > 1 ? 1 :  1;
+				// System.out.println(temp);
 				weights[i][j]=temp;
 			}
 		}
@@ -31,16 +32,11 @@ public abstract class BCNH extends GamePlayer{
 	{ return Util.inrange(r, 0, ROWS-1) && Util.inrange(c, 0, COLS-1); }
 	
 	private static NHPair countIsolated(ClobberState brd, int r, int c, char opp, boolean[][] visited){
-	  ArrayList<Coords> opps = new ArrayList<Coords>();
-	  ArrayList<Coords> allies = new ArrayList<Coords>();
-	  NHPair init = countIsolatedHelper(brd, r ,c ,opp, visited, opps);
-	  if (opps.size() == 1){
-	   // bool multipleNeighbors = checkNeighbors(opps[0], opp)
-	  }
-	  else if (opps.size() > init.count){
-	    init.factor = .5f;
-	  }
-	  return init;
+	  Set<Coords> opps = new HashSet<Coords>();
+	  NHPair isolated = countIsolatedHelper(brd,r,c,opp,visited,opps);
+	  isolated.oppCount = opps.size();
+	  //System.out.println("OppCount: " + isolated.oppCount + "flag: " + isolated.sign);
+	  return isolated;
 	}
 	
 	/*
@@ -49,7 +45,7 @@ public abstract class BCNH extends GamePlayer{
 	 * correct calculation to run minimax and alpha beta on
 	 * Note you are passing in the opponent here so if away is past in 
 	 */
-	private static NHPair countIsolatedHelper(ClobberState brd, int r, int c, char opp, boolean[][] visited, ArrayList<Coords> opps){
+	private static NHPair countIsolatedHelper(ClobberState brd, int r, int c, char opp, boolean[][] visited, Set<Coords> opps){
 		/*
 		if( brd.board[r][c] == opp){
 			System.out.print("!!!!!!!");
@@ -61,7 +57,7 @@ public abstract class BCNH extends GamePlayer{
 		}
 		p.count = 1;
 		p.sum = weights[r][c];
-		p.factor = 1;
+		p.oppCount = 0;
 		visited[r][c] = true;
 		for (int i = -1; i<2; i+=2){
 			int tmpRow = r + i;
@@ -69,30 +65,31 @@ public abstract class BCNH extends GamePlayer{
 			if(posOK(tmpRow,c)) {
 				if (brd.board[tmpRow][c] == opp) {
 					p.sign = false;
-					opps.add(new Coords(r,c));
+					opps.add(new Coords(tmpRow,c));
 				}
 				else if (brd.board[tmpRow][c] == ClobberState.emptySym){
 					
 				}
 				else {
-					NHPair neighborPair = countIsolated(brd, tmpRow, c, opp, visited);
+					NHPair neighborPair = countIsolatedHelper(brd, tmpRow, c, opp, visited,opps);
 					if (!neighborPair.sign){
 						p.sign = false;
 					}
 					p.count += neighborPair.count;
 					p.sum += neighborPair.sum;
+					
 				}
 			}
 			if(posOK(r,tmpCol)) {
 				if (brd.board[r][tmpCol] == opp) {
 					p.sign = false;
-					opps.add(new Coords(r,c));
+					opps.add(new Coords(r,tmpCol));
 				}
 				else if (brd.board[r][tmpCol] == ClobberState.emptySym){
 					
 				}
 				else {
-					NHPair neighborPair = countIsolated(brd, r, tmpCol, opp, visited);
+					NHPair neighborPair = countIsolatedHelper(brd, r, tmpCol, opp, visited,opps);
 					if (!neighborPair.sign){
 						p.sign = false;
 					}
@@ -108,7 +105,7 @@ public abstract class BCNH extends GamePlayer{
 	private static int isolatedLoop(ClobberState brd, char opp, char player){
 		boolean [][] visited = new boolean [ROWS][COLS];
 		int isolated = 0;
-		int largestGroup = 0;
+		double largestGroup = 0;
 		int secondGroup = 0;
 		for(int i = 0; i < ROWS; i++) {
 			for ( int j = 0; j < COLS; j++){
@@ -118,14 +115,14 @@ public abstract class BCNH extends GamePlayer{
 						isolated+=temp.count;
 					}
 					else{
-						largestGroup += (temp.count-1)*temp.sum;
+						largestGroup += (temp.count-temp.oppCount/2.0)*temp.sum;
 					}
 				}
 			}
 		}
 		/*System.out.println(brd.toString());
 		System.out.println("isoloated: " + isolated + ", largestGroup: " + largestGroup);*/
-		return 5*isolated - 3*largestGroup; 
+		return 5*isolated - (int)(3*largestGroup); 
 	}
 	/*
 	 * Returns score of board

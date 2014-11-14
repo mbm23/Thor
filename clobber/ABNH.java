@@ -51,7 +51,7 @@ public class ABNH extends BCNH implements Runnable {
 	ArrayList<Coords> orderedMoves = new ArrayList<Coords>(30);
 	// protected ScoredClobberMove [] mvStack;
 	int movesMade = 0;
-	int fixedDepth = 5;
+	int fixedDepth = 6;
 	ClobberState board;
 	double currBest;
 	int moveIndex = 0;
@@ -296,6 +296,7 @@ public class ABNH extends BCNH implements Runnable {
 	public GameMove getMove(GameState state, String lastMove)
 	{
     double maxTime = Math.min(210, Math.max(2,timeRemaining*.75 - 10));
+    maxTime = 5;
 		board = (ClobberState)state;
 		for(int i = 0; i < orderedMoves.size(); i++){
 			if(board.board[orderedMoves.get(i).row][orderedMoves.get(i).col] == board.emptySym){
